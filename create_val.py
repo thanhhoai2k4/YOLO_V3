@@ -5,43 +5,6 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-def update_xml_in_val(xml_path, new_folder_name, new_image_dir):
-    """
-    Cập nhật các thẻ <folder> và <path> trong một tệp XML trong thư mục val.
-
-    Args:
-        xml_path (Path): Đối tượng Path đến tệp XML cần cập nhật.
-        new_folder_name (str): Tên thư mục cha mới (ví dụ: 'val').
-        new_image_dir (Path): Đối tượng Path đến thư mục chứa ảnh mới (val/images).
-    """
-    try:
-        tree = ET.parse(str(xml_path))
-        root = tree.getroot()
-
-        filename_tag = root.find('filename')
-        if filename_tag is None:
-            print(f"Cảnh báo: Không tìm thấy thẻ <filename> trong {xml_path.name}")
-            return False
-
-        # Đường dẫn ảnh mới tuyệt đối
-        new_image_path = new_image_dir.joinpath(filename_tag.text).resolve()
-
-        # Cập nhật thẻ <folder>
-        folder_tag = root.find('folder')
-        if folder_tag is not None:
-            folder_tag.text = new_folder_name
-
-        # Cập nhật thẻ <path>
-        path_tag = root.find('path')
-        if path_tag is not None:
-            path_tag.text = str(new_image_path)
-
-        tree.write(str(xml_path), encoding='utf-8')
-        return True
-    except Exception as e:
-        print(f"Lỗi khi cập nhật tệp XML {xml_path.name}: {e}")
-        return False
-
 
 def create_structured_validation_set(source_annot_dir, source_image_dir, val_annot_dir, val_image_dir, val_split=0.2):
     """
@@ -96,8 +59,6 @@ def create_structured_validation_set(source_annot_dir, source_image_dir, val_ann
                 shutil.move(str(image_path), str(dest_image_path))
                 shutil.move(str(xml_path), str(dest_xml_path))
 
-                # Cập nhật XML đã di chuyển
-                update_xml_in_val(dest_xml_path, val_annot_path.parent.name, val_img_path)
 
                 moved_count += 1
                 found_image = True
@@ -120,7 +81,7 @@ if __name__ == '__main__':
     VAL_IMAGES = 'val/images'
 
     # Tỷ lệ dữ liệu validation (ví dụ: 0.2 là 20%)
-    VALIDATION_SPLIT = 0.2
+    VALIDATION_SPLIT = 0.5
     # -------------------
 
     create_structured_validation_set(

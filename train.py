@@ -7,8 +7,8 @@ import os
 
 xml_list = os.listdir("data/annotations")  # lay danh sach cac file xml
 xml_list_val = os.listdir("val/annotations")
-batch_size = 2
-epochs = 200
+batch_size = 10
+epochs = 100
 anchors = np.array([[[116, 90], [156, 198], [373, 326]],
                     [[30, 61], [62, 45], [59, 119]],
                     [[10, 13], [16, 30], [33, 23]]],

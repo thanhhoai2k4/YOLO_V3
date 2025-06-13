@@ -231,7 +231,7 @@ def datagenerator_cache():
 # val
 def datagenerator_val():
     for xml in xml_list_val:
-        path_image, boxes = parse_xml(xml)
+        path_image, boxes = parse_xml(xml,False)
         head13, head26, head52 = encode_boxes(path_image, boxes)
         img = cv2.imread(path_image)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
