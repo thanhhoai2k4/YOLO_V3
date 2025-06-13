@@ -27,10 +27,11 @@ dataset_train = tf.data.Dataset.from_generator(
             tf.TensorSpec(shape=(26, 26, 3, 8), dtype=tf.float32),  # head 2
             tf.TensorSpec(shape=(52, 52, 3, 8), dtype=tf.float32)  # head 3
         )))
-dataset_train = dataset_train.batch(batch_size)
-dataset_train = dataset_train.shuffle(batch_size * 4)
-dataset_train = dataset_train.prefetch(tf.data.experimental.AUTOTUNE)
 dataset_train = dataset_train.repeat()
+dataset_train = dataset_train.shuffle(batch_size * 4)
+dataset_train = dataset_train.batch(batch_size)
+dataset_train = dataset_train.prefetch(tf.data.experimental.AUTOTUNE)
+
 
 dataset_val = tf.data.Dataset.from_generator(
     lambda: datagenerator_val(),
@@ -43,7 +44,6 @@ dataset_val = tf.data.Dataset.from_generator(
         )))
 dataset_val = dataset_val.batch(batch_size)
 dataset_val = dataset_val.prefetch(tf.data.experimental.AUTOTUNE)
-dataset_val = dataset_val.repeat()
 
 yolo_model.fit(dataset_train, epochs=epochs, steps_per_epoch=(len(xml_list) // batch_size), validation_data=dataset_val, validation_steps=len(xml_list_val)//batch_size)
 yolo_model.save("model.h5")
