@@ -1,3 +1,4 @@
+from tensorflow.keras.callbacks import ModelCheckpoint
 from yolo_v3_model import create_yolo_v3
 from data_loader import datagenerator, datagenerator_val
 import tensorflow as tf
@@ -7,7 +8,7 @@ import os
 
 xml_list = os.listdir("data/annotations")  # lay danh sach cac file xml
 xml_list_val = os.listdir("val/annotations")
-batch_size = 10
+batch_size = 1
 epochs = 100
 anchors = np.array([[[116, 90], [156, 198], [373, 326]],
                     [[30, 61], [62, 45], [59, 119]],
@@ -16,7 +17,9 @@ anchors = np.array([[[116, 90], [156, 198], [373, 326]],
 
 yolo_model = create_yolo_v3()
 optimizer = tf.keras.optimizers.Adam(0.001)
-yolo_model.compile(optimizer=optimizer, loss=[getloss(3), getloss(3), getloss(3)], run_eagerly=False)
+yolo_model.compile(optimizer=optimizer, loss=[getloss(3, anchors[0]),
+                                              getloss(3, anchors[1]), getloss(3,anchors[2])],
+                   run_eagerly=False)
 
 dataset_train = tf.data.Dataset.from_generator(
     lambda: datagenerator(),
@@ -45,5 +48,17 @@ dataset_val = tf.data.Dataset.from_generator(
 dataset_val = dataset_val.batch(batch_size)
 dataset_val = dataset_val.prefetch(tf.data.experimental.AUTOTUNE)
 
-yolo_model.fit(dataset_train, epochs=epochs, steps_per_epoch=(len(xml_list) // batch_size), validation_data=dataset_val, validation_steps=len(xml_list_val)//batch_size)
-yolo_model.save("model.h5")
+
+filepath = "best_model.h5"
+checkpoint = ModelCheckpoint(
+    filepath,
+    monitor='val_loss', # Theo dõi validation loss tổng của model
+    verbose=1,          # In thông báo khi lưu model
+    save_best_only=True,# Chỉ lưu model nếu 'val_loss' được cải thiện
+    mode='min'          # Chế độ 'min' vì chúng ta muốn loss nhỏ nhất
+)
+callbacks_list = [checkpoint]
+
+yolo_model.fit(dataset_train, epochs=epochs, steps_per_epoch=(len(xml_list) // batch_size),
+               validation_data=dataset_val, validation_steps=len(xml_list_val)//batch_size,
+               callbacks=callbacks_list)
