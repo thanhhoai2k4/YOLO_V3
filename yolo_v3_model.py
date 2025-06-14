@@ -159,7 +159,8 @@ def decode_predictions(y_pred, anchors, grid_size, num_classes=3):
 
     # Áp dụng hàm mũ cho tw, th và nhân với kích thước anchor
     # anchors có shape (3, 2) cần reshape để nhân với tw_th có shape (batch, grid, grid, 3, 2)
-    box_wh = tf.exp(tw_th) * anchors.reshape(1, 1, 1, num_anchors, 2)
+    safe_tw_th  = tf.clip_by_value(tw_th,-15, 15)
+    box_wh = tf.exp(safe_tw_th) * anchors.reshape(1, 1, 1, num_anchors, 2)
 
     # --- Bước 3: Giải mã điểm tin cậy và xác suất lớp ---
     confidence = tf.sigmoid(confidence_logit)
