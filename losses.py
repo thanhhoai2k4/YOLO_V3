@@ -1,5 +1,7 @@
 import tensorflow as tf
 import numpy as np
+from yolo_v3_model import decode_predictions
+
 num_class = 3
 
 ANCHORS = np.array([[[116,90], [156,198], [373,326]],
@@ -41,7 +43,7 @@ def compute_iou_for_yolo(boxes1, boxes2):
     return iou
 
 
-def getloss(num_class, weight = [5.0, 1.0, 0.1, 1.0]):
+def getloss(num_class,anchors, weight = [5.0, 5.0, 0.1, 1.0]):
     def loss_function(y_true, y_pred):
 
         batch = tf.shape(y_pred)[0]
@@ -54,13 +56,23 @@ def getloss(num_class, weight = [5.0, 1.0, 0.1, 1.0]):
         p = y_pred[...,5:]
         y_pred = tf.concat([xy, wh, c, p], axis=-1)
 
+        xywhtrue_decode = decode_predictions(y_true,anchors, grid, num_class)
+        xywhpred_decode = decode_predictions(y_pred,anchors, grid, num_class)
+
+        xywhtrue_decode = tf.reshape(xywhtrue_decode, [batch, grid, grid, 3, 5+num_class])
+        xywhpred_decode = tf.reshape(xywhpred_decode, [batch, grid, grid, 3, 5 + num_class])
+
+
+        ious = compute_iou_for_yolo(xywhtrue_decode, xywhpred_decode)
+        ious = tf.stop_gradient(ious)
+
         mask_object = tf.cast(y_true[...,4:5]==1.0, tf.float32)
         mask_no_object = tf.cast(y_true[...,4:5]==0, tf.float32)
 
         box = tf.expand_dims(tf.keras.losses.MSE(y_true[...,0:4], y_pred[...,0:4]),axis=-1) * mask_object
         box_loss = tf.math.reduce_sum(box)
 
-        confident_all_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true[...,4], logits=y_pred[...,4])
+        confident_all_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=ious, logits=y_pred[...,4])
         confident_loss = tf.reduce_sum(tf.expand_dims(confident_all_loss,axis=-1) * mask_object)
         confident_no_loss = tf.reduce_sum(tf.expand_dims(confident_all_loss,axis=-1) * mask_no_object)
 
