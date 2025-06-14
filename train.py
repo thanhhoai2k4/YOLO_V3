@@ -16,7 +16,7 @@ anchors = np.array([[[116, 90], [156, 198], [373, 326]],
                    dtype=np.float32) / 416
 
 yolo_model = create_yolo_v3()
-optimizer = tf.keras.optimizers.Adam(0.001)
+optimizer = tf.keras.optimizers.Adam(0.0001)
 yolo_model.compile(optimizer=optimizer, loss=[getloss(3, anchors[0]),
                                               getloss(3, anchors[1]), getloss(3,anchors[2])],
                    run_eagerly=False)
