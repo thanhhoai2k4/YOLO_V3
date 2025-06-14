@@ -6,26 +6,29 @@ import numpy as np
 import os
 
 xml_list = os.listdir("data/annotations") # lay danh sach cac file xml
-batch_size = 1
+batch_size = 2
 
 anchors = np.array([[[116,90], [156,198], [373,326]],
                     [[30,61], [62,45], [59,119]],
                     [[10,13], [16,30], [33,23]]],
                    dtype=np.float32) / 416
 
-epochs = 100
+epochs = 200
 
 if  not os.path.exists("model.h5"):
 
     yolo_model = create_yolo_v3()
     optimizer = tf.keras.optimizers.Adam(0.0001)
-    yolo_model.compile(optimizer=optimizer, loss=[getloss(3), getloss(3), getloss(3)], run_eagerly=False)
+    yolo_model.compile(optimizer=optimizer, loss=[getloss(3, anchors[0]),
+                                                  getloss(3, anchors[1]), getloss(3, anchors[2])],
+                       run_eagerly=True)
 else:
     print("load model tuyen huan luyen")
     yolo_model = tf.keras.models.load_model("model.h5")
     optimizer = tf.keras.optimizers.Adam(0.0001)
-    yolo_model.compile(optimizer=optimizer, loss=[getloss(3), getloss(3), getloss(3)], run_eagerly=False)
-
+    yolo_model.compile(optimizer=optimizer, loss=[getloss(3, anchors[0]),
+                                                  getloss(3, anchors[1]), getloss(3, anchors[2])],
+                       run_eagerly=False)
 
 imgs , head13, head26, head52 = datagenerator_cache()
 dataset = tf.data.Dataset.from_tensor_slices((imgs, (head13, head26, head52))).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
