@@ -185,8 +185,8 @@ def encode_boxes(path_image: str, boxes: np.ndarray, grid_size_list: list[int, i
         # Tính toán các giá trị target (tx, ty, tw, th)
         tx = grid_size * box[0] - grid_x
         ty = grid_size * box[1] - grid_y
-        tw = np.log(box[2] / selected_anchor_wh[0])
-        th = np.log(box[3] / selected_anchor_wh[1])
+        tw = np.log(box[2] / selected_anchor_wh[0] + 1e-6)
+        th = np.log(box[3] / selected_anchor_wh[1] + 1e-6)
 
         # Gán giá trị vào mảng y_true tương ứng
         y_true[grid_y, grid_x, anchor_index_in_scale, 0:4] = [tx, ty, tw, th]
